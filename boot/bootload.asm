@@ -11,7 +11,7 @@ start:
     mov [BOOT_DRIVE], dl ; save BIOS
     
     mov ah, 0x02 ; load stage 2 to x8000
-    mov al, 5
+    mov al, 7 ; protected bytes
     mov ch, 0
     mov cl, 2
     mov dh, 0

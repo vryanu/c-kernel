@@ -87,5 +87,5 @@ message db "Booted in protected mode                                      ", 0 ;
 %include "../kernel/interrupts/idt.asm"
 %include "../kernel/interrupts/pic.asm"
 
-times 2560 - ($ - $$) db 0
+times 3584 - ($ - $$) db 0
 dw 0xAA55
