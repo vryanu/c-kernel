@@ -9,6 +9,8 @@
 
 ## ASM Constants
 
+**TERMINAL_COLOR** - 0x1049C
+
 **CODE_SEG** - 0x08
 **DATA_SEG** - 0x10
 
