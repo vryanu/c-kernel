@@ -1,5 +1,6 @@
 timer_ticks dd 0
 hex_digits db "0123456789ABCDEF"
+%define TERMINAL_COLOR 0x1049C
 
 shift_pressed db 0
 
@@ -77,10 +78,18 @@ keyboard_handler: ;IRQ1 keyboard
 
     mov ah, 0x0F ; print loop
     mov edi, [KEYBOARD_CURSOR]
-    mov [edi], ax
-    add edi, 2
 
+    mov cl, al
+
+    movzx eax, byte [TERMINAL_COLOR]
+    shl eax, 8
+    mov al, cl
+    
+    mov [edi], ax
+
+    add edi, 2
     mov [KEYBOARD_CURSOR], edi
+
     call vga_update_cursor ; update cursor after print
     jmp .eoi
 
@@ -98,17 +107,25 @@ keyboard_handler: ;IRQ1 keyboard
     cmp dword [KEYBOARD_LEN], 0
     je .eoi
 
-    dec dword [KEYBOARD_LEN] ; removes last buffer byte
+    dec dword [KEYBOARD_LEN]
 
     mov ecx, [KEYBOARD_LEN]
     mov byte [KEYBOARD_BUFFER + ecx], 0
 
-    mov edi, [KEYBOARD_CURSOR] ; erase from VGA
-    call vga_update_cursor ; update cursor after deletion
+    mov edi, [KEYBOARD_CURSOR] ; removes last buffer byte
+    cmp edi, 0xB8000
+    jbe .eoi
+
     sub edi, 2
 
-    mov word [edi], 0x0F20
+    movzx eax, byte [TERMINAL_COLOR]
+    shl eax, 8
+    mov al, ' '
+
+    mov [edi], ax
     mov [KEYBOARD_CURSOR], edi
+
+    call vga_update_cursor ; update cursor after deletion
     jmp .eoi
 
 .enter:

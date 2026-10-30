@@ -7,7 +7,7 @@
 #define VGA_HEIGHT 25
 #define VGA_MEMORY ((volatile uint16_t *)0xB8000)
 
-static uint8_t terminal_color;
+volatile uint8_t terminal_color;
 
 static uint16_t vga_entry(char c, uint8_t color)
 {   /* combine char and color, c=A & color=0x0F
@@ -53,7 +53,7 @@ static void tnewline(void)
 void tinitialize(void)
 {   /* set terminals color to black
        clear all text */
-    terminal_color = 0x0F;
+    tset_color(0x0F);
     tclear();
 }
 
@@ -113,6 +113,9 @@ void tclear(void)
 }
 
 void tset_color(uint8_t color)
-{ // change color
+{ // changes full terminal color
     terminal_color = color;
+
+    for (uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
+        VGA_MEMORY[i] = (VGA_MEMORY[i] & 0x00FF) | ((uint16_t)color << 8);
 }

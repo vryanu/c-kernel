@@ -10,11 +10,9 @@
 #define KEYBOARD_CURSOR (*(volatile uint32_t *)0x70088)
 #define COMMAND_MAX 128
 
-int strcmp(const char *str1, const char *str2);
+int strncmp(const char *str1, const char *str2, size_t n);
 static void shell_execute(const char *command);
 static int parse_command(char *destination);
-
-char command[COMMAND_MAX];
 
 void kernel_main(void)
 {
@@ -22,6 +20,8 @@ void kernel_main(void)
 
     twrite("Kernel Initialized");
     tprintChar('\n');
+
+    char command[COMMAND_MAX];
 
     while(1)
     {
@@ -35,10 +35,10 @@ void kernel_main(void)
 
 static void shell_execute(const char *command)
 {
-    if (strcmp(command, help.name) == 0)
-        help.func();
-    else if (strcmp(command, color.name) == 0)
-        color.func();
+    if (strncmp(command, help.name, 4) == 0)
+        help.func(command);
+    else if (strncmp(command, color.name, 5) == 0)
+        color.func(command);
     else
     {
         twrite("command not found");
@@ -103,13 +103,13 @@ static int parse_command(char *destination)
 
 
 
-int strcmp(const char *str1, const char *str2)
+int strncmp(const char *str1, const char *str2, size_t n)
 {
-    while (*str1 && (*str1 == *str2))
+    for (size_t i = 0; i < n; i++)
     {
-        str1++;
-        str2++;
+        if (str1[i] != str2[i] || str1[i] == '\0')
+            return (unsigned char)str1[i] - (unsigned char)str2[i];
     }
 
-    return (unsigned char)*str1 - (unsigned char)*str2;
+    return 0;
 }
