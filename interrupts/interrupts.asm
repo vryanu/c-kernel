@@ -3,11 +3,6 @@ hex_digits db "0123456789ABCDEF"
 
 shift_pressed db 0
 
-keyboard_len dd 0
-keyboard_buffer times 128 dd 0
-
-keyboard_cursor dd 0xB8140 ; Start on row 2
-
 ;chars
 keymap:
     db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
@@ -25,19 +20,6 @@ timer_handler: ; IRQ0 timer
     pushad
 
     inc dword [timer_ticks]
-
-    mov eax, [timer_ticks]
-
-    mov ebx, eax
-    and ebx, 0x0F
-    mov dl, [hex_digits + ebx]
-    mov dh, 0x0F
-    mov [0xB80A0], dx
-
-    shr eax, 4
-    and eax, 0x0F
-    mov dl, [hex_digits + eax]
-    mov [0xB80A2], dx
 
     mov al, 0x20
     out 0x20, al
@@ -86,55 +68,55 @@ keyboard_handler: ;IRQ1 keyboard
     test al, al
     jz .eoi
 
-    cmp dword [keyboard_len], 127 ; check size
+    cmp dword [KEYBOARD_LEN], 127 ; check size
     jae .eoi
 
-    mov ecx, [keyboard_len] ; add char to input buffer
-    mov [keyboard_buffer + ecx], al
-    inc dword [keyboard_len]
+    mov ecx, [KEYBOARD_LEN] ; add char to input buffer
+    mov [KEYBOARD_BUFFER + ecx], al
+    inc dword [KEYBOARD_LEN]
 
     mov ah, 0x0F ; print loop
-    mov edi, [keyboard_cursor]
+    mov edi, [KEYBOARD_CURSOR]
     mov [edi], ax
     add edi, 2
 
-    mov [keyboard_cursor], edi
+    mov [KEYBOARD_CURSOR], edi
     call vga_update_cursor ; update cursor after print
     jmp .eoi
 
 .shift_down:
     mov byte [shift_pressed], 1
+    cmp byte [COMMAND_READY], 1
     jmp .eoi
 
 .shift_up:
     mov byte [shift_pressed], 0
+    cmp byte [COMMAND_READY], 1
     jmp .eoi
 
 .backspace:
-    cmp dword [keyboard_len], 0
+    cmp dword [KEYBOARD_LEN], 0
     je .eoi
 
-    dec dword [keyboard_len] ; removes last buffer byte
+    dec dword [KEYBOARD_LEN] ; removes last buffer byte
 
-    mov ecx, [keyboard_len]
-    mov byte [keyboard_buffer + ecx], 0
+    mov ecx, [KEYBOARD_LEN]
+    mov byte [KEYBOARD_BUFFER + ecx], 0
 
-    mov edi, [keyboard_cursor] ; erase from VGA
+    mov edi, [KEYBOARD_CURSOR] ; erase from VGA
     call vga_update_cursor ; update cursor after deletion
     sub edi, 2
 
     mov word [edi], 0x0F20
-    mov [keyboard_cursor], edi
+    mov [KEYBOARD_CURSOR], edi
     jmp .eoi
 
 .enter:
-    mov ecx, [keyboard_len] ; terminate current input
-    mov byte [keyboard_buffer + ecx], 0
+    mov ecx, [KEYBOARD_LEN] ; terminate current input
+    mov byte [KEYBOARD_BUFFER + ecx], 0
+    mov byte [COMMAND_READY], 1 ; read command
 
-    mov dword [keyboard_len], 0 ; reset buffer len
-
-    mov edi, [keyboard_cursor] ; Move cursor to next line
-    call vga_update_cursor ; move cursor down
+    mov edi, [KEYBOARD_CURSOR] ; Move cursor to next line
     mov eax, edi
     sub eax, 0xB8000
 
@@ -146,11 +128,12 @@ keyboard_handler: ;IRQ1 keyboard
     imul eax, 160
     add eax, 0xB8000
 
-    mov [keyboard_cursor], eax
+    mov [KEYBOARD_CURSOR], eax
+    call vga_update_cursor ; move cursor down
     jmp .eoi
 
 .save_cursor: ; save cursor address
-    mov [keyboard_cursor], edi
+    mov [KEYBOARD_CURSOR], edi
 
 .eoi:
     mov al, 0x20
@@ -180,7 +163,7 @@ handler: ; default handler
     jmp .halt
 
 vga_update_cursor:
-    mov eax, [keyboard_cursor] ; convert VGA memory address to a char index
+    mov eax, [KEYBOARD_CURSOR] ; convert VGA memory address to a char index
     sub eax, 0xB8000
     shr eax, 1
 
