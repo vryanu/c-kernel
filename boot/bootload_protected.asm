@@ -58,7 +58,7 @@ protected_mode:
     call idt_init
     call pic_init
 
-    mov al, 0xFE
+    mov al, 0xFC
     out 0x21, al
     sti
 

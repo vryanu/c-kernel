@@ -7,6 +7,8 @@ idt_start:
 %rep entries
     %if i = 32 ; lower bits use timer or handler if past 32
         dw timer_handler
+    %elif i = 33
+        dw keyboard_handler
     %else
         dw handler
     %endif
