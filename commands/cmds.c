@@ -27,6 +27,14 @@ void help_func(int argc, char **argv)
 
 void color_func(int argc, char **argv)
 {
+    const char *themes[][2] = { {"default", "0x0F"},
+                                {"hacker", "0x0A"}, 
+                                {"halloween", "0x60"},
+                                {"christmas", "0x42"},
+                                {"sky", "0x1F"},
+                                {"void", "0x00"},
+                                {"neon", "0xA9"} };
+
     if (argc != 2)
     {
         twriteln("Usage: color 0x0F");
@@ -34,11 +42,25 @@ void color_func(int argc, char **argv)
     }
 
     const char *arg = argv[1];
+    int found = 0;
 
     if (arg[0] != '0' || (arg[1] != 'x' && arg[1] != 'X'))
     {
-        twriteln("Invalid hex value");
-        return;
+        for (size_t i = 0; i < sizeof(themes) / sizeof(themes[0]); i++)
+        {
+            int result = strcmp(argv[1], themes[i][0]);
+            if (result == 0)
+            {
+                arg = themes[i][1];
+                found = 1;
+                break;
+            }
+        }
+        if (!found)
+        {
+            twriteln("Unknown theme");
+            return;
+        }
     }
 
     arg += 2;
@@ -73,6 +95,12 @@ void color_func(int argc, char **argv)
     tset_color(color);
 }
 
+
+
+
+
+
+
 int strncmp(const char *str1, const char *str2, size_t n)
 {
     for (size_t i = 0; i < n; i++)
@@ -82,6 +110,16 @@ int strncmp(const char *str1, const char *str2, size_t n)
     }
 
     return 0;
+}
+
+int strcmp(const char *str1, const char *str2) 
+{
+    while (*str1 && (*str1 == *str2)) {
+        str1++;
+        str2++;
+    }
+
+    return *(const unsigned char *)str1 - *(const unsigned char *)str2;
 }
 
 

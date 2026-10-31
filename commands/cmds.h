@@ -12,7 +12,9 @@ typedef struct
 
 void help_func(int argc, char **argv);
 void color_func(int argc, char **argv);
+
 int strncmp(const char *str1, const char *str2, size_t n);
+int strcmp(const char *str1, const char *str2);
 
 extern Cmd help;
 extern Cmd color;

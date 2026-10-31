@@ -12,7 +12,6 @@
 #define MAX_ARGS 16
 
 static int parse_args(char *command, char **argv);
-
 static void shell_execute(const char *command);
 static int parse_command(char *destination);
 
@@ -22,7 +21,7 @@ extern void pic_init(void);
 void kernel_main(void)
 {   /* initialize idt, pic, terminal
        main loop, waits and checks for input*/
-       
+
     idt_init();
     pic_init();
 
