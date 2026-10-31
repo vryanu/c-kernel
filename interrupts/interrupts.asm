@@ -1,6 +1,19 @@
+BITS 32
+
+%define KEYBOARD_BUFFER 0x70000
+%define KEYBOARD_LEN 0x70080
+%define COMMAND_READY 0x70084
+%define KEYBOARD_CURSOR 0x70088
+
+global handler
+global keyboard_handler
+global timer_handler
+
+extern terminal_color
+
 timer_ticks dd 0
 hex_digits db "0123456789ABCDEF"
-%define TERMINAL_COLOR 0x1049C
+
 
 shift_pressed db 0
 
@@ -81,7 +94,7 @@ keyboard_handler: ;IRQ1 keyboard
 
     mov cl, al
 
-    movzx eax, byte [TERMINAL_COLOR]
+    movzx eax, byte [terminal_color]
     shl eax, 8
     mov al, cl
     
@@ -118,7 +131,7 @@ keyboard_handler: ;IRQ1 keyboard
 
     sub edi, 2
 
-    movzx eax, byte [TERMINAL_COLOR]
+    movzx eax, byte [terminal_color]
     shl eax, 8
     mov al, ' '
 

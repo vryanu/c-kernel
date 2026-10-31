@@ -1,5 +1,6 @@
 ;programmable interrupt controller
-
+BITS 32
+global pic_init
 ;master
 PIC1_COMMAND equ 0x20;32
 PIC1_DATA    equ 0x21;33
@@ -33,8 +34,10 @@ pic_init:
     out PIC1_DATA, al
     out PIC2_DATA, al
 
-    mov al, 0xFF
+    mov al, 0xFC
     out PIC1_DATA, al
+
+    mov al, 0xFF
     out PIC2_DATA, al
 
     ret

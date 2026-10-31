@@ -9,46 +9,76 @@
 #define COMMAND_READY   (*(volatile uint8_t *)0x70084)
 #define KEYBOARD_CURSOR (*(volatile uint32_t *)0x70088)
 #define COMMAND_MAX 128
+#define MAX_ARGS 16
 
-int strncmp(const char *str1, const char *str2, size_t n);
+static int parse_args(char *command, char **argv);
+
 static void shell_execute(const char *command);
 static int parse_command(char *destination);
 
+extern void idt_init(void);
+extern void pic_init(void);
+
 void kernel_main(void)
-{
+{   /* initialize idt, pic, terminal
+       main loop, waits and checks for input*/
+       
+    idt_init();
+    pic_init();
+
     tinitialize();
 
     twrite("Kernel Initialized");
     tprintChar('\n');
+
+    __asm__ volatile ("sti");
 
     char command[COMMAND_MAX];
 
     while(1)
     {
         if (parse_command(command))
-        {
             shell_execute(command);
-        }
+
         __asm__ volatile ("hlt");
     }
 }
 
 static void shell_execute(const char *command)
-{
-    if (strncmp(command, help.name, 4) == 0)
-        help.func(command);
-    else if (strncmp(command, color.name, 5) == 0)
-        color.func(command);
+{   /* fill argv and argc
+       call according functions */
+    char buffer[COMMAND_MAX];
+    char *argv[MAX_ARGS];
+
+    size_t i = 0;
+
+    while (command[i] && i < COMMAND_MAX - 1)
+    {
+        buffer[i] = command[i];
+        i++;
+    }
+
+    buffer[i] = '\0';
+
+    int argc = parse_args(buffer, argv);
+
+    if (argc == 0)
+        return;
+
+    if (strncmp(argv[0], help.name, 4) == 0)
+        help.func(argc, argv);
+    else if (strncmp(argv[0], color.name, 5) == 0)
+        color.func(argc, argv);
     else
     {
         twrite("command not found");
         tprintChar('\n');
     }
-
 }
 
 static int parse_command(char *destination)
-{
+{   /* disables interrupts to parse inputted command
+       returns 1 if there is text */
     uint32_t flags;
     uint32_t length;
 
@@ -101,15 +131,31 @@ static int parse_command(char *destination)
     return 1;
 }
 
+static int parse_args(char *command, char **argv)
+{   /* creates inline args
+       every space/tab = an arg
+       returns argc for the count
+       loops each space/tab for command
+       fills argv with commands */
+    int argc = 0;
+    char *p = command;
 
-
-int strncmp(const char *str1, const char *str2, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
+    while (*p && argc < MAX_ARGS)
     {
-        if (str1[i] != str2[i] || str1[i] == '\0')
-            return (unsigned char)str1[i] - (unsigned char)str2[i];
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        if (*p == '\0')
+            break;
+
+        argv[argc++] = p;
+
+        while (*p && *p != ' ' && *p != '\t')
+            p++;
+
+        if (*p)
+            *p++ = '\0';
     }
 
-    return 0;
+    return argc;
 }

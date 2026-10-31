@@ -7,7 +7,7 @@
 #define VGA_HEIGHT 25
 #define VGA_MEMORY ((volatile uint16_t *)0xB8000)
 
-volatile uint8_t terminal_color;
+volatile uint8_t terminal_color = 0x0F;
 
 static uint16_t vga_entry(char c, uint8_t color)
 {   /* combine char and color, c=A & color=0x0F
@@ -98,6 +98,12 @@ void twrite(const char *text)
 {   // prints a string by repeat printing chars
     while (*text)
         tprintChar(*text++);
+}
+
+void twriteln(const char *text)
+{   // print a string followed by \n
+    twrite(text);
+    tprintChar('\n');
 }
 
 void tclear(void)

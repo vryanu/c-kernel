@@ -115,12 +115,6 @@ protected_mode:
     mov dword [KEYBOARD_CURSOR], 0xB8140
 
     mov esp, 0x90000 ; new stack
-    call idt_init
-    call pic_init
-
-    mov al, 0xFC
-    out 0x21, al
-    sti
 
     mov eax, 0x10000 ; call the kernel
     call eax
@@ -132,9 +126,5 @@ halt:
     jmp .halt
 
 message db "Booted in protected mode                                      ", 0 ;hide label
-
-%include "../kernel/interrupts/interrupts.asm"
-%include "../kernel/interrupts/idt.asm"
-%include "../kernel/interrupts/pic.asm"
 
 times 3584 - ($ - $$) db 0

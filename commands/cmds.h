@@ -1,17 +1,21 @@
 #ifndef CMDS_H
 #define CMDS_H
 
+#include <stddef.h>
+
 typedef struct
 {   /* Create command object
-    consists of name and function */
+       pass argc & argv */
     const char *name;
-    void (*func)(const char *command);
+    void (*func)(int argc, char **argv);
 } Cmd;
 
-void help_func(const char *command);
-void color_func(const char *command);
+void help_func(int argc, char **argv);
+void color_func(int argc, char **argv);
+int strncmp(const char *str1, const char *str2, size_t n);
 
 extern Cmd help;
 extern Cmd color;
+
 
 #endif

@@ -1,4 +1,3 @@
-
 NASM = nasm
 CC = i386-elf-gcc
 LD = i386-elf-ld
@@ -16,6 +15,13 @@ KERNEL_ELF = kernel.elf
 KERNEL_BIN = kernel.bin
 KERNEL_PADDED = kernel_padded.bin
 LINKER_SCRIPT = linker.ld
+
+ASM_SOURCES = \
+    interrupts/interrupts.asm \
+    interrupts/idt.asm \
+    interrupts/PIC.asm
+
+ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
 
 C_SOURCES = \
     kernel.c \
@@ -41,8 +47,11 @@ $(STAGE2).bin: $(STAGE2).asm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(KERNEL_ELF): $(C_OBJECTS) $(LINKER_SCRIPT)
-	$(LD) -m elf_i386 -T $(LINKER_SCRIPT) -o $@ $(C_OBJECTS)
+%.o: %.asm
+	$(NASM) -f elf32 $< -o $@
+
+$(KERNEL_ELF): $(C_OBJECTS) $(ASM_OBJECTS) $(LINKER_SCRIPT)
+	$(LD) -m elf_i386 -T $(LINKER_SCRIPT) -o $@ $(C_OBJECTS) $(ASM_OBJECTS)
 
 $(KERNEL_BIN): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $< $@
@@ -62,4 +71,5 @@ run: $(IMAGE)
 
 clean:
 	rm -f $(BOOT).bin $(STAGE2).bin $(IMAGE)
-	rm -f $(C_OBJECTS) $(KERNEL_ELF) $(KERNEL_BIN) $(KERNEL_PADDED)
+	rm -f $(C_OBJECTS) $(ASM_OBJECTS)
+	rm -f $(KERNEL_ELF) $(KERNEL_BIN) $(KERNEL_PADDED)
