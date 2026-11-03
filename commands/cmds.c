@@ -1,4 +1,5 @@
 #include "../terminal/terminal.h"
+#include "../filesys/disk/ata.h"
 #include "cmds.h"
 
 #include <stdint.h>
@@ -6,9 +7,39 @@
 
 Cmd help = {.name = "help", .func = help_func};
 Cmd color = {.name = "color", .func = color_func};
+Cmd ata = {.name = "test_ata", .func = test_ata};
 
+void test_ata(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
 
+    uint8_t buffer[512];
 
+    if (read_sector(0, buffer) != 0)
+    {
+        twriteln("ATA read failed");
+        return;
+    }
+
+    twriteln("ATA read successful");
+
+    const char hex[] = "0123456789ABCDEF";
+    char output[3];
+
+    for (int i = 510; i < 512; i++)
+    {
+        output[0] = hex[buffer[i] >> 4];
+        output[1] = hex[buffer[i] & 0x0F];
+        output[2] = '\0';
+
+        twrite(output);
+        twrite(" ");
+    }
+    tprintChar('\n');
+}
+// EB 00 90 00 53 00 20 00 34 00 34 00 02 00 01 00
+// 55 AA
 void help_func(int argc, char **argv)
 {
     (void)argc;

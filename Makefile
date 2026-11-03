@@ -26,7 +26,8 @@ ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
 C_SOURCES = \
     kernel.c \
     terminal/terminal.c \
-    commands/cmds.c
+    commands/cmds.c \
+	filesys/disk/ata.c
 
 C_OBJECTS = $(C_SOURCES:.c=.o)
 
@@ -65,7 +66,9 @@ $(IMAGE): $(BOOT).bin $(STAGE2).bin $(KERNEL_PADDED)
 	cat $(BOOT).bin $(STAGE2).bin $(KERNEL_PADDED) > $(IMAGE)
 
 run: $(IMAGE)
-	$(QEMU) -drive format=raw,file=$(IMAGE) \
+	$(QEMU) \
+		-drive file=$(IMAGE),format=raw,index=0,media=disk \
+		-drive file=disk.img,format=raw,index=1,media=disk \
 		-net none \
 		-fw_cfg name=opt/org.seabios/boot-menu-message,string=" "
 

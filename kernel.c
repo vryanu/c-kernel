@@ -68,6 +68,8 @@ static void shell_execute(const char *command)
         help.func(argc, argv);
     else if (strncmp(argv[0], color.name, 5) == 0)
         color.func(argc, argv);
+    else if (strncmp(argv[0], ata.name, 8) == 0)
+        ata.func(argc, argv);
     else
     {
         twrite("command not found");
